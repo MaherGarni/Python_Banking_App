@@ -3,11 +3,10 @@ import csv
 import os
 
 fieldnames = ["id","first_name","last_name","password","checking","savings","active","overdraft_count"]
-options = ['1', '2' , '3','4','5']
-options_y_n =['Y' , 'N']
-
+options = ['1','2','3','4','5']
 
 class User:
+
     def __init__(self, id, first_name, last_name, password , checking="False", savings="False", active = True , overdraft_count=0):
         self.id = id
         self.first_name = first_name
@@ -22,22 +21,9 @@ class User:
     def __str__(self):
         return f"{self.id} , {self.first_name} {self.last_name} , {self.password} , {self.checking}, {self.savings} , {self.active} , {self.overdraft_count}"
     
-# class Account:
-#     def __init__(self, owner,balance = 0):
-#         self.owner = owner
-#         self.balance = balance
-
-
-# class Checking(Account):
-#     def __init__(self, owner, balance=0):
-#         super().__init__(owner, balance)
-
-# class Savings(Account):
-#     def __init__(self, owner, balance=0):
-#         super().__init__(owner, balance)
 
 class Bank:
-    
+
     def __init__(self):
         self.users = {}
         self.load_users()
@@ -77,13 +63,14 @@ class Bank:
 
     
     def create_user(self):
+
         print("="*40)
         print("       Create User  \n")
         user_first_name = input('Enter First Name: ')
         print()
-        user_last_name = input('Enter Last Name: ')
+        user_last_name  = input('Enter Last Name: ')
         print()
-        user_password = input('Enter Password: ')
+        user_password   = input('Enter Password: ')
         print()
         user = User(self.ids , user_first_name, user_last_name,user_password)
         self.users[user.id] = user
@@ -91,7 +78,7 @@ class Bank:
         self.user = user
         
         try:
-            new_row = {'id': user.id,
+            new_row = { 'id': user.id,
                         'first_name': user.first_name,
                         'last_name': user.last_name,
                         'password' : f'{user.password}',
@@ -118,7 +105,7 @@ class Bank:
         print("2) Withdraw")
         print("3) Deposit")
         print("4) Tansfer")
-        print("5) Log Out")
+        print("5) Log Out\n")
         print("="*40)
 
         user_option = None
@@ -131,7 +118,7 @@ class Bank:
             case '1':
                 self.create_account()
             case '2':
-                pass
+                self.withdraw()
             case '3':
                 pass
             case '4':
@@ -171,31 +158,82 @@ class Bank:
                 print ("you already have savings account")
         
         self.update_csv()
+
+    def withdraw(self):
+
+        if not self.user.active :
+            print('Sorry, your account is deactivated!\nYou need to have positive balance to activate your account')
+            return
+        if type(self.user.checking) == bool and type(self.user.savings) == bool :
+            print('Sorry, you need to create account first')
+            return
+        
+        print(f"\n       Withdraw from checking or savings   ")
+        print("="*40)
+        print("1) Checking")
+        print("2) Savings")
+        print("="*40)
+
+        user_option = None
+        while not user_option or user_option not in options[:2]:
+            user_option = input("Pick an option: ")
+            if user_option not in options[:2]:
+                print('Invalid Option, try again')
+        
+        if user_option == '1':
+            if type(self.user.checking) == bool:
+                print("You don't have checking account")
+                return
+        if user_option == '2':
+            if type(self.user.savings) == bool:
+                print("You don't have savings account")
+                return
+        
+        user_amount = None
+        while not user_amount or type(user_amount) != int:
+            user_amount = input('Enter the amount to withdraw: ')
+            if user_amount.strip().isnumeric():
+                user_amount = int(user_amount)
+                if user_amount > 100 :
+                    print("Sorry, you can't withdraw more than 100 in one transaction")
+                    user_amount = None
+            else:
+                print('Invalid, please enter valid number')
+
+        if user_option == '1':
+            self.user.checking -= user_amount
+            print(f'Success, your current balance: {self.user.checking}')
+        else:
+            self.user.savings -= user_amount
+            print(f'Success, your current balance: {self.user.savings}')
+            
+        
+        self.update_csv()
+
+        # overdraf ?
+        # fee ?
     
     def update_csv(self):
-        if  os.path.exists("bank.csv"):
+        if os.path.exists("bank.csv"):
             with open("bank.csv", 'w', newline='') as csvfile:
                 try:
                     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
                     writer.writeheader()
-                    for key, row in self.users.items():
+                    for row in self.users.values():
                         writer.writerow(row.__dict__)
                 except csv.Error as e:
                     print(e)
-
         self.load_users()
 
 
 
 def init():
+
     bank = Bank()
 
-    # for idx ,user in bank.users.items():
-    #     print(user)
     print("="*40)
     print("       Welcome to Maher Bank!  ")
     print("="*40)
-    print()
     print("1) Sign in")
     print("2) Create User")
     print("3) Quit")
@@ -214,8 +252,7 @@ def init():
         bank.create_user()
 
     if bank.user:
-        while bank.user_menu():
-            bank.user_menu()
+        bank.user_menu()
 
 
 
