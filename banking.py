@@ -5,13 +5,20 @@ import os
 fieldnames = ["id","first_name","last_name","password","checking","savings","active","overdraft_count"]
 options = ['1','2','3','4','5']
 
-def print_to_screen(header, options):
-    print("\n\t", header)
-    print("="*40)
-    for option in options:
-        print(option)
-    print("="*40)
 
+class Print:
+    def __init__(self, header , options):
+        self.header = header
+        self.options = options
+
+    @classmethod
+    def print_to_screen(cls, header, options):
+        print("\n\t", header)
+        print("="*40)
+        for option in options:
+            print(option)
+        print("="*40)
+        
 
 class User:
 
@@ -69,7 +76,7 @@ class Transaction:
     def transfer(self):
 
         other_acct = 'savings' if self.bank.acct_choice == 'checking' else 'checking'
-        print_to_screen('Transfer' , [f'1) transfer to {other_acct}' , '2) transfer to another user'])
+        Print.print_to_screen('Transfer' , [f'1) transfer to {other_acct}' , '2) transfer to another user'])
 
         user_option = None
         while not user_option or user_option not in options[:3]:
@@ -104,7 +111,7 @@ class Transaction:
             if type(target_user.checking) == bool and type(target_user.savings) != bool :
                 target_user.savings += amount
             if type(target_user.checking) != bool and type(target_user.savings) != bool :
-                print_to_screen('User has two accounts. Pick one' , ['1) Checking' , '2) Savings'])
+                Print.print_to_screen('User has two accounts. Pick one' , ['1) Checking' , '2) Savings'])
 
                 user_option = None
                 while not user_option or user_option not in options[:3]:
@@ -281,7 +288,7 @@ class Bank:
     def account_access(self):
 
         if type(self.user.checking) != bool and  type(self.user.savings) != bool :
-            print_to_screen('Which account to access' , ['1) Checking' , '2) Savings'])
+            Print.print_to_screen('Which account to access' , ['1) Checking' , '2) Savings'])
             user_option = None
             while not user_option or user_option not in options[:3]:
                 user_option = input("Pick an option: ")
@@ -293,7 +300,7 @@ class Bank:
                 self.acct_choice = 'savings'
 
         if type(self.user.checking) != bool and type(self.user.savings) == bool:
-            print_to_screen('Pick Option' , ['1) Chickeng' , '2) Create and access savings account'])
+            Print.print_to_screen('Pick Option' , ['1) Chickeng' , '2) Create and access savings account'])
             user_option = None
             while not user_option or user_option not in options[:3]:
                 user_option = input("Pick account to access : ")
@@ -306,7 +313,7 @@ class Bank:
                 self.acct_choice = 'savings'
 
         if type(self.user.checking) == bool and type(self.user.savings) != bool:
-            print_to_screen('Pick Option', ['1) Savings' , '2) Create and access checking account'])
+            Print.print_to_screen('Pick Option', ['1) Savings' , '2) Create and access checking account'])
             user_option = None
             while not user_option or user_option not in options[:3]:
                 user_option = input("Pick account to access: ")
@@ -376,7 +383,7 @@ def init():
 
     bank = Bank()
 
-    print_to_screen(" Welcome to Maher Bank!", ["1) Sign in", "2) Create User", "3) Quit"])
+    Print.print_to_screen(" Welcome to Maher Bank!", ["1) Sign in", "2) Create User", "3) Quit"])
 
     user_option = input('Pick an option: ')
     while user_option not in options:
