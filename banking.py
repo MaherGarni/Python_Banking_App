@@ -27,7 +27,100 @@ class User:
 
     def __str__(self):
         return f"{self.id} , {self.first_name} {self.last_name} , {self.password} , {self.checking}, {self.savings} , {self.active} , {self.overdraft_count}"
+
+class Transaction:
+
+    def __init__(self , bank):
+        self.bank = bank
+
+    def withdraw(self):
+       print(f"\n       Withdraw    ")
+       print("="*40)
+       user_amount = self.bank.user_amount('w')
+       curr_balance = getattr(self.bank.user, self.bank.acct_choice)
+       if curr_balance > 0 and user_amount <= curr_balance:
+           new_balance = curr_balance - user_amount
+           setattr(self.bank.user , self.bank.acct_choice,new_balance)
+           print(f'Success, your current {self.bank.acct_choice} balance: {new_balance}')
+       else:
+           self.bank.over_draft_calc(user_amount, curr_balance)
+           
+       self.bank.update_csv()
+
+    def deposite(self):
+        print(f"\n       Deposite    ")
+        print("="*40)
+
+        user_amount = self.bank.user_amount('deposite')
+
+        curr_balance = getattr(self.bank.user , self.bank.acct_choice)
+        new_balance = curr_balance + user_amount
+        setattr(self.bank.user , self.bank.acct_choice , new_balance)
+        print(f'Success, your current {self.bank.acct_choice} balance: {new_balance}')
+        if curr_balance < 0 and new_balance >= 0 :
+            self.bank.user.overdraft_count = 0
+            if not self.bank.user.active:
+                print('Your account is now activated')
+                self.bank.user.active = True
+
+
+        self.bank.update_csv()
     
+    def transfer(self):
+
+        other_acct = 'savings' if self.bank.acct_choice == 'checking' else 'checking'
+        print_to_screen('Transfer' , [f'1) transfer to {other_acct}' , '2) transfer to another user'])
+
+        user_option = None
+        while not user_option or user_option not in options[:3]:
+            user_option = input("Pick an option: ")
+            if user_option not in options[:3]:
+                print('Invalid Option, try again')
+        
+        amount = self.bank.user_amount('transfer')
+        curr_acct_balance = getattr(self.bank.user , self.bank.acct_choice)
+
+        if amount > curr_acct_balance :
+            print(f"Sorry, transfer amount exceeds your current balance. Current balance: {curr_acct_balance}.")
+            return
+        
+        if user_option == '1' :
+        
+            other_acct_balance = getattr(self.bank.user , other_acct) + amount
+            setattr(self.bank.user , other_acct , other_acct_balance)
+            print(f'Succsess, your {self.bank.acct_choice} balance: {curr_acct_balance - amount}, and your {other_acct} is now : {other_acct_balance} ')
+
+        if user_option == '2':
+
+            user_id = None
+            while not user_id or user_id not in self.bank.users:
+                user_id = input('Enter the user ID: ')
+                if user_id not in self.bank.users:
+                    print("Account ID doesn't exists! \n")
+
+            target_user = self.bank.users[user_id] 
+            if type(target_user.checking) != bool and type(target_user.savings) == bool :
+                target_user.checking += amount
+            if type(target_user.checking) == bool and type(target_user.savings) != bool :
+                target_user.savings += amount
+            if type(target_user.checking) != bool and type(target_user.savings) != bool :
+                print_to_screen('User has two accounts. Pick one' , ['1) Checking' , '2) Savings'])
+
+                user_option = None
+                while not user_option or user_option not in options[:3]:
+                    user_option = input("Pick an option: ")
+                    if user_option not in options[:3]:
+                        print('Invalid Option, try again')
+                
+                if user_option == '1' :
+                    target_user.checking += amount
+                else : 
+                    target_user.savings += amount
+            print(f'Succsess, your {self.bank.acct_choice} balance: {curr_acct_balance - amount}.')
+
+        setattr(self.bank.user , self.bank.acct_choice , curr_acct_balance - amount)
+        self.bank.update_csv()
+
 class Bank:
 
     def __init__(self):
@@ -104,6 +197,8 @@ class Bank:
 
     def user_menu (self):
 
+        transaction = Transaction(self)
+
         while True:
 
             print("="*40)
@@ -125,7 +220,7 @@ class Bank:
 
                 match user_option:
                     case '1':
-                        self.deposite()
+                        transaction.deposite()
                     case '2':
                         break 
 
@@ -145,11 +240,11 @@ class Bank:
 
                 match user_option:
                     case '1':
-                        self.withdraw()
+                        transaction.withdraw()
                     case '2':
-                        self.deposite()
+                        transaction.deposite()
                     case '3':
-                        self.transfer()
+                        transaction.transfer()
                     case '4':
                         break
 
@@ -225,23 +320,6 @@ class Bank:
 
         self.update_csv()
 
-    def withdraw(self):
-        print(f"\n       Withdraw    ")
-        print("="*40)
-
-        user_amount = self.user_amount('w')
-
-        curr_balance = getattr(self.user, self.acct_choice)
-        if curr_balance > 0 and user_amount <= curr_balance:
-            new_balance = curr_balance - user_amount
-            setattr(self.user , self.acct_choice,new_balance)
-            print(f'Success, your current {self.acct_choice} balance: {new_balance}')
-        else:
-            self.over_draft_calc(user_amount, curr_balance)
-            
-
-        self.update_csv()
-
     def over_draft_calc(self , amount, curr_balance):
         if  curr_balance - amount < -65 :
             print(f'Sorry, not allowed, account balance can not go below -100')
@@ -281,80 +359,6 @@ class Bank:
 
         return user_amount
     
-    def deposite(self):
-        print(f"\n       Deposite    ")
-        print("="*40)
-
-        user_amount = self.user_amount('deposite')
-
-        curr_balance = getattr(self.user , self.acct_choice)
-        new_balance = curr_balance + user_amount
-        setattr(self.user , self.acct_choice , new_balance)
-        print(f'Success, your current {self.acct_choice} balance: {new_balance}')
-        if curr_balance < 0 and new_balance >= 0 :
-            self.user.overdraft_count = 0
-            if not self.user.active:
-                print('Your account is now activated')
-                self.user.active = True
-
-
-        self.update_csv()
-    
-    def transfer(self):
-
-        other_acct = 'savings' if self.acct_choice == 'checking' else 'checking'
-        print_to_screen('Transfer' , [f'1) transfer to {other_acct}' , '2) transfer to another user'])
-
-        user_option = None
-        while not user_option or user_option not in options[:3]:
-            user_option = input("Pick an option: ")
-            if user_option not in options[:3]:
-                print('Invalid Option, try again')
-        
-        amount = self.user_amount('transfer')
-        curr_acct_balance = getattr(self.user , self.acct_choice)
-
-        if amount > curr_acct_balance :
-            print(f"Sorry, transfer amount exceeds your current balance. Current balance: {curr_acct_balance}.")
-            return
-        
-        if user_option == '1' :
-        
-            other_acct_balance = getattr(self.user , other_acct) + amount
-            setattr(self.user , other_acct , other_acct_balance)
-            print(f'Succsess, your {self.acct_choice} balance: {curr_acct_balance - amount}, and your {other_acct} is now : {other_acct_balance} ')
-
-        if user_option == '2':
-
-            user_id = None
-            while not user_id or user_id not in self.users:
-                user_id = input('Enter the user ID: ')
-                if user_id not in self.users:
-                    print("Account ID doesn't exists! \n")
-
-            target_user = self.users[user_id] 
-            if type(target_user.checking) != bool and type(target_user.savings) == bool :
-                target_user.checking += amount
-            if type(target_user.checking) == bool and type(target_user.savings) != bool :
-                target_user.savings += amount
-            if type(target_user.checking) != bool and type(target_user.savings) != bool :
-                print_to_screen('User has two accounts. Pick one' , ['1) Checking' , '2 Savings'])
-
-                user_option = None
-                while not user_option or user_option not in options[:3]:
-                    user_option = input("Pick an option: ")
-                    if user_option not in options[:3]:
-                        print('Invalid Option, try again')
-                
-                if user_option == '1' :
-                    target_user.checking += amount
-                else : 
-                    target_user.savings += amount
-            print(f'Succsess, your {self.acct_choice} balance: {curr_acct_balance - amount}.')
-
-        setattr(self.user , self.acct_choice , curr_acct_balance - amount)
-        self.update_csv()
-
     def update_csv(self):
         if os.path.exists("bank.csv"):
             with open("bank.csv", 'w', newline='') as csvfile:

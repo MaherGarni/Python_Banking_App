@@ -1,7 +1,7 @@
 id,first_name,last_name,password,checking,savings,active,overdraft_count
-10001,William,Hartnell,1,28,0,True,0
-10002,Patrick,Troughton,s,-62,0,True,1
-10003,Jon ,Pertwee,233!,0,250,True,0
+10001,William,Hartnell,1,71,50,True,0
+10002,Patrick,Troughton,s,-62,-45,False,2
+10003,Jon ,Pertwee,233!,30,250,True,0
 10004,Tom ,Baker,ee,0,5,True,0
 10005,Peter ,Davison,w,25,-100,False,2
 10006,Suresh ,Sigera,w,45,-40,False,2
@@ -13,7 +13,7 @@ id,first_name,last_name,password,checking,savings,active,overdraft_count
 100012,Devlin,Booth,123456,0,0,True,0
 100013,maher,qarni,222,0,0,True,0
 100014,ali,a,111,0,0,True,0
-100015,osamah,a,222,0,0,True,0
+100015,osamah,a,222,0,0,True,1
 100016,Ahmed,j,190,5,False,True,0
 100017,Maher,Garni,1,0,-50,True,0
 100018,Ali,Basil,w,0,0,True,0
